@@ -1,0 +1,20 @@
+The goal of this project is to analyse customer data and segment them into meaningful groups for targeted marketing strategies.
+
+Background:
+The company, a prominent automobile manufacturer, has been experiencing a significant decline in sales within the young professional segment,impacting overall revenue.
+Research indicates that a lack of personalized customer experiences and the absence of tailored after-sales services are major factors driving the decline in this segment.
+The project’s goal is to conduct customer segmentation analysis to identify key customer groups, predict future purchasing behaviours, 
+and devise personalized customer experiences to improve customer engagement and retention rates.
+
+Data Provided:
+Raw_data: This Excel file dataset included the following sheets of data:
+• Transactions_data: This dataset included the transactions data of the customers across all the different states in Australia.
+• NewCustomerList: This dataset included the new customers who visited the automobile bike company recently.
+• CustomerDemographic: This dataset included entire details of the Customer Demographics.
+• CustomerAddress: This dataset included the address of the Customers.
+
+Tasks:
+1. Data Exploration: Understand the features, data types, and any missing values and visualize the data using appropriate plots (e.g., histograms, scatter plots, etc.).
+2. Data Preprocessing: Clean the data by handling missing values, outliers, and duplicates and perform feature engineering if necessary (e.g., creating new features, scaling, etc.).
+3. Customer Segmentation: Apply clustering algorithms (e.g., K-means, DBSCAN, GMM, etc.) to segment customers, evaluate the quality of the clusters (e.g., silhouette score, inertia, etc.) and interpret the results and describe the characteristics of each segment.
+4. Marketing Recommendations: Based on the customer segments, propose targeted marketing strategies and discuss how different segments can be approached differently (e.g., promotions, personalized offers, etc.).
