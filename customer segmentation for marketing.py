@@ -14,7 +14,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np 
 from sklearn.impute import KNNImputer
-from mixtend.preprocesing import minmax_scaling
+from mlxtend.preprocesing import minmax_scaling
 
 #for interactive visualization
 import chart_studio
@@ -224,7 +224,7 @@ plt.xlabel('tenure')
 plt.ylabel('property valuation')
 
 #using ploty to make it interactive
-scat = go.Scater(
+scat = go.Scatter(
     x=cluster['tenure'],
     y=cluster['property_valuation'],
     mode = 'markers',
@@ -242,7 +242,7 @@ lay = go.Layout(
     title='custeomer segment',
     xaxis = dict(title='tenure'),
     yaxis = dict(title='poperty_valuation')),
-fig= go.Figure(data=scat,layouit=lay),
+fig= go.Figure(data=[scat],layout=lay),
 py.iplot(fig,filename='customer segments')
 
 # cluster quality assesment using silouhette score
