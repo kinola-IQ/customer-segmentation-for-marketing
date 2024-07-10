@@ -11,15 +11,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
-# from sklearn.preprocessing import OneHotEncoder
-import numpy as np 
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
+import numpy as np 
 from sklearn.impute import KNNImputer
+from mixtend.preprocesing import minmax_scaling
+
+#for interactive visualization
+import chart_studio
+import chart_studio.plotly as py
+import plotly.graph_objs as go
+from plotly.offline import iplot
+
 
 sns.set_style('darkgrid')
 imputer = KNNImputer(n_neighbors=10)
 
+#seting my credentials so i can move it to my plotly account
+chart_studio.tools.set_credentials_file(username='akinola',api_key='5emur8gyjp')
 #custom modules
 import visuals as vs
 import checks as ch
@@ -56,8 +64,8 @@ Missing_object= ch.Null_by_dtype(Transactions,NewCustomerList,CustomerDemographi
 
 Missing_float= ch.Null_by_dtype(Transactions,NewCustomerList,CustomerDemographic,CustomerAddress,Type='float')
 
-percentage_missing = (Transactions.isna().sum().sum() / np.product(Transactions.shape)) * 100
-print(percentage_missing)
+percentage_missing = (Transactions.isna().sum() / np.product(Transactions.shape)) * 100
+
 
 #-----------------checking for duplicates----------------------
 dup_check = ch.Dup_Tot(Transactions,NewCustomerList,CustomerDemographic,CustomerAddress)
@@ -79,11 +87,21 @@ Transactions['year'] = Transactions['transaction_date'].dt.year
 
 # chekcing for distribution
 Transactions['order_status_rank'] = Transactions['order_status'].map({'Approved':1,'Cancelled':0})
-
 # print(Transactions.order_status.value_counts())
 
+# Group by order_status and computing sum of order_status_rank
+grouped_data = Transactions.groupby('order_status')['order_status_rank'].sum().reset_index()
+
+# Pivot to create a suitable structure for clustering
+pivot_data = grouped_data.pivot(index='order_status', columns='order_status_rank', values='order_status_rank')
+
+# Filling with NaN values if evident
+pivot_data = pivot_data.fillna(0)
+
+# Creating a dendrogram to check distribution
 # plt.figure()
-# data2 = vs.hist(Transactions , 'order_status_rank')
+data2 = sns.clustermap(pivot_data, cmap='mako')
+
 # print(data2)
 
 
@@ -99,17 +117,19 @@ CustomerDemographic = CustomerDemographic.drop(unusable,axis=1)
 
 
 #----------------handling missing data---------------------
+#--------------scaling missing numerical values so they contribute equally in KNN
+Transactions[['standard_cost','product_first_sold_date']] = minmax_scaling(Transactions,columns=[['standard_cost','product_first_sold_date']])
+
 #------------------Impute missing values in Transactions--------------------------
 
-#filing with most common occurence
+#filing categories with most common occurence
 Transactions['online_order'] = Transactions['online_order'].fillna(Transactions['online_order'].mode()[0])
 for x in ['brand', 'product_line','product_class','product_size']:
     Transactions[x] = Transactions[x].fillna(Transactions[x].mode()[0])
 
-#----filling the missing values in standard_cost with median due to the presence of outliers
+#----filling missing numerics with KNN
 Transactions['standard_cost'] = imputer.fit_transform(Transactions[['standard_cost']])
 
-#--- filling with mean
 Transactions.product_first_sold_date = imputer.fit_transform(Transactions[['product_first_sold_date']] )
 
 #--------------------------------correcting flawed column data---------------------------
@@ -139,7 +159,7 @@ NewCustomerList['DOB'] = pd.to_datetime(NewCustomerList['DOB'],errors='coerce')
 for df in [NewCustomerList,CustomerDemographic,Transactions]:
     for col in ['DOB']:
         if col in df.columns:
-            df[col] = df[col].fillna(df[col].mean())
+            df[col] = df[col].fillna(df[col].median())
             df[col]=df[col].dt.date
 
 # fillling,job title,job_industry_category with unprovided
@@ -147,7 +167,8 @@ CustomerDemographic['job_title'] = CustomerDemographic['job_title'].fillna('unpr
 CustomerDemographic['job_industry_category'] = CustomerDemographic['job_industry_category'].fillna('unprovided')
 
 #filling tenure with median due to the presence of outliers
-CustomerDemographic['tenure'] = CustomerDemographic['tenure'].fillna(CustomerDemographic['tenure'].median())
+CustomerDemographic['tenure'] = minmax_scaling(CustomerDemographic,columns=['tenure'])
+CustomerDemographic['tenure'] = imputer.fit_transaform(CustomerDemographic['tenure'])
 
 
 #----------------validating changes----------------
@@ -180,9 +201,11 @@ for cols in ['online_order','order_status', 'brand', 'product_line','product_cla
 # cluster analysis 
 cluster = NewCustomerList[['state','tenure','property_valuation']].copy()
 
+#standardizing metrics to give equal weight
 std = cluster[['tenure','property_valuation']].copy()
 std=preprocessing.scale(std)
 
+# using elbow method to find optimal clusters
 wcss = []
 for i in range(1,10):
     kmeans=KMeans(i,random_state=3)
@@ -190,23 +213,43 @@ for i in range(1,10):
     inert=kmeans.inertia_
     wcss.append(inert)
 data = list(range(1,10))
-plt.plot(data,wcss,marker='|',markersize=15)
+# plt.plot(data,wcss,marker='|',markersize=15)
+# plt.axline(4, color='r',linestyle='--')
 
 kmeans = KMeans(4,random_state=3)
-
-
 cluster['id'] = kmeans.fit_predict(std)
-# plt.figure()
-# plt.scatter(cluster['tenure'],cluster['property_valuation'],c=cluster['id'],cmap='rainbow')
-# plt.xlabel('tenure')
-# plt.ylabel('property valuation')
+plt.figure()
+plt.scatter(cluster['tenure'],cluster['property_valuation'],c=cluster['id'],cmap='rainbow')
+plt.xlabel('tenure')
+plt.ylabel('property valuation')
 
+#using ploty to make it interactive
+scat = go.Scater(
+    x=cluster['tenure'],
+    y=cluster['property_valuation'],
+    mode = 'markers',
+    marker = (
+        dict(
+            size=12,
+            color=cluster['id'],
+            colorscale='rainbow'
+            )),
+    showlegend=True,
+    text =cluster['id'],
+    hoverinfo = 'text+x+y'
+    )
+lay = go.Layout(
+    title='custeomer segment',
+    xaxis = dict(title='tenure'),
+    yaxis = dict(title='poperty_valuation')),
+fig= go.Figure(data=scat,layouit=lay),
+py.iplot(fig,filename='customer segments')
 
-# transactions
-# print(CustomerDemographic.columns )
-# plt.figure()
-# plt.scatter(CustomerDemographic['past_3_years_bike_related_purchases'],CustomerDemographic['tenure'])
-
-
-# cluster quality assesment
-
+# cluster quality assesment using silouhette score
+wcss = []
+for i in range(2,10):
+    kmeans = KMeans(i)
+    cluster = kmeans.fit_predict(std)
+    validation = silhouette_score(std,cluster)
+    wcss.append(validation)
+print(wcss)
