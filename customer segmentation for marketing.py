@@ -21,16 +21,18 @@ import chart_studio
 import chart_studio.plotly as py
 import plotly.graph_objs as go
 from plotly.offline import iplot
+import plotly.colors as pc
 
+#custom modules
+import visuals as vs
+import checks as ch
 
+np.random.seed(0) # for reproduceability
 sns.set_style('darkgrid')
 imputer = KNNImputer(n_neighbors=10)
 
 #seting my credentials so i can move it to my plotly account
 chart_studio.tools.set_credentials_file(username='akinola',api_key='fBtlKegjI3i0LyYOxWV5')
-#custom modules
-import visuals as vs
-import checks as ch
 
 
 #------reading in provided data------------
@@ -166,7 +168,7 @@ for df in [NewCustomerList,CustomerDemographic,Transactions]:
 CustomerDemographic['job_title'] = CustomerDemographic['job_title'].fillna('unprovided')
 CustomerDemographic['job_industry_category'] = CustomerDemographic['job_industry_category'].fillna('unprovided')
 
-#filling tenure with median due to the presence of outliers
+#performing imputation on tenure using knn
 CustomerDemographic['tenure'] = imputer.fit_transform(CustomerDemographic[['tenure']])
 
 
@@ -223,25 +225,32 @@ plt.xlabel('tenure')
 plt.ylabel('property valuation')
 
 #using ploty to make it interactive
-scat = go.Scatter(
-    x=cluster['tenure'],
-    y=cluster['property_valuation'],
-    mode = 'markers',
-    marker = (
-        dict(
-            size=12,
-            color=cluster['id'],
-            colorscale='rainbow'
-            )),
-    showlegend=True,
-    text =cluster['id'],
-    hoverinfo = 'text+x+y'
-    )
+scatter = []
+color_scale = pc.qualitative.Plotly
+unique_ids = cluster['id'].unique()
+color_map = {id_value: color_scale[i % len(color_scale)] for i, id_value in enumerate(unique_ids)}
+
+for id_value, cluster in cluster.groupby('id'):
+    scat = go.Scatter(
+        x=cluster['tenure'],
+        y=cluster['property_valuation'],
+        mode = 'markers',
+        marker = (
+            dict(
+                size=12,
+                color=color_map[id_value],
+                )),
+        showlegend=True,
+        text =color_map[id_value],
+        name = f"group {id_value}",
+        hoverinfo = 'text+x+y'
+        )
+    scatter.append(scat)
 lay = go.Layout(
-    title='custeomer segment',
+    title='customer segment',
     xaxis = dict(title='tenure'),
-    yaxis = dict(title='poperty_valuation'))
-fig= go.Figure(data=[scat],layout=lay)
+    yaxis = dict(title='poperty valuation'))
+fig= go.Figure(data=scatter,layout=lay)
 py.iplot(fig,filename='customer segments')
 
 # cluster quality assesment using silouhette score
