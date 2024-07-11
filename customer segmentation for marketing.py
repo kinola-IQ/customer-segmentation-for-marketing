@@ -22,6 +22,7 @@ import chart_studio.plotly as py
 import plotly.graph_objs as go
 from plotly.offline import iplot
 import plotly.colors as pc
+import plotly.express as px
 
 #custom modules
 import visuals as vs
@@ -122,6 +123,13 @@ CustomerDemographic = CustomerDemographic.drop(unusable,axis=1)
 
 
 #----------------handling missing data---------------------
+#--------------scaling missing numerical values so they contribute equally in KNN
+# Convert standard_cost to numerical values
+# Transactions['standard_cost'] = pd.to_numeric(Transactions['standard_cost'], errors='coerce')
+# Transactions['product_first_sold_date'] = pd.to_numeric(Transactions['product_first_sold_date'], errors='coerce')
+
+# Transactions[['standard_cost','product_first_sold_date']] = minmax_scaling(Transactions,columns=[['standard_cost','product_first_sold_date']])
+
 #------------------Impute missing values in Transactions--------------------------
 
 #filing categories with most common occurence
@@ -168,7 +176,8 @@ for df in [NewCustomerList,CustomerDemographic,Transactions]:
 CustomerDemographic['job_title'] = CustomerDemographic['job_title'].fillna('unprovided')
 CustomerDemographic['job_industry_category'] = CustomerDemographic['job_industry_category'].fillna('unprovided')
 
-#performing imputation on tenure using knn
+#filling tenure with median due to the presence of outliers
+# CustomerDemographic['tenure'] = minmax_scaling(CustomerDemographic,columns=['tenure'])
 CustomerDemographic['tenure'] = imputer.fit_transform(CustomerDemographic[['tenure']])
 
 
@@ -198,6 +207,10 @@ for cols in ['online_order','order_status', 'brand', 'product_line','product_cla
         CustomerDemographic[cols] = CustomerDemographic[cols].astype('category')
     if cols in CustomerAddress.columns:
         CustomerAddress[cols] = CustomerAddress[cols].astype('category')
+        
+#----disribution of bike related purchases over the past three years        
+dist = px.sunburst(NewCustomerList ,path=['state','wealth_segment'],values ='past_3_years_bike_related_purchases')
+py.iplot(dist,filename = 'bike related purchases')
 
 # cluster analysis 
 cluster = NewCustomerList[['state','tenure','property_valuation']].copy()
@@ -241,9 +254,8 @@ for id_value, cluster in cluster.groupby('id'):
                 color=color_map[id_value],
                 )),
         showlegend=True,
-        text =color_map[id_value],
         name = f"group {id_value}",
-        hoverinfo = 'text+x+y'
+        hoverinfo = 'name+x+y'
         )
     scatter.append(scat)
 lay = go.Layout(
