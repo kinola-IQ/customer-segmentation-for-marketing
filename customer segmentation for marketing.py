@@ -15,7 +15,7 @@ from sklearn.metrics import silhouette_score
 import numpy as np 
 from sklearn.impute import KNNImputer
 from mlxtend.preprocessing import minmax_scaling
-import charset_normalizer
+
 #for interactive visualization
 import chart_studio
 import chart_studio.plotly as py
@@ -27,7 +27,7 @@ sns.set_style('darkgrid')
 imputer = KNNImputer(n_neighbors=10)
 
 #seting my credentials so i can move it to my plotly account
-chart_studio.tools.set_credentials_file(username='akinola',api_key='5emur8gyjp')
+chart_studio.tools.set_credentials_file(username='akinola',api_key='fBtlKegjI3i0LyYOxWV5')
 #custom modules
 import visuals as vs
 import checks as ch
@@ -75,7 +75,6 @@ unamed_cols = ( NewCustomerList[NewCustomerList.columns[NewCustomerList.columns.
 
 #---------first to check if 'default' column is encoded before removing-------------
 check = ch.detect_encoding(file_path, 'CustomerDemographic' , 'default')
-
 #-------encoded but still not useful so i'll remove it---------
 unusable = ( CustomerDemographic[CustomerDemographic.columns[CustomerDemographic.columns.str.contains('default')]])
 
@@ -121,13 +120,6 @@ CustomerDemographic = CustomerDemographic.drop(unusable,axis=1)
 
 
 #----------------handling missing data---------------------
-#--------------scaling missing numerical values so they contribute equally in KNN
-# Convert standard_cost to numerical values
-Transactions['standard_cost'] = pd.to_numeric(Transactions['standard_cost'], errors='coerce')
-Transactions['product_first_sold_date'] = pd.to_numeric(Transactions['product_first_sold_date'], errors='coerce')
-
-Transactions[['standard_cost','product_first_sold_date']] = minmax_scaling(Transactions,columns=[['standard_cost','product_first_sold_date']])
-
 #------------------Impute missing values in Transactions--------------------------
 
 #filing categories with most common occurence
@@ -175,8 +167,7 @@ CustomerDemographic['job_title'] = CustomerDemographic['job_title'].fillna('unpr
 CustomerDemographic['job_industry_category'] = CustomerDemographic['job_industry_category'].fillna('unprovided')
 
 #filling tenure with median due to the presence of outliers
-CustomerDemographic['tenure'] = minmax_scaling(CustomerDemographic,columns=['tenure'])
-CustomerDemographic['tenure'] = imputer.fit_transaform(CustomerDemographic['tenure'])
+CustomerDemographic['tenure'] = imputer.fit_transform(CustomerDemographic[['tenure']])
 
 
 #----------------validating changes----------------
