@@ -6,6 +6,8 @@ Created on Thu Jun 13 10:48:03 2024
 """
 
 import pandas as pd
+import charset_normalizer
+import os
 from typing import List, Optional, Union
 
 
@@ -135,3 +137,35 @@ def process_date(dfs: List[pd.DataFrame], date_columns: List[str], fill_strategy
                 except Exception as e:
                     print(f"Error processing column {col} in DataFrame: {e}")
     return dfs
+def detect_encoding(file_path,sheet_name,column_To_check):
+    """
+    Detect the character encoding of the first few rows of a given sheet in an Excel file.
+
+    Args:
+    file_path (str): Path to the Excel file.
+    sheet_name (str): Name of the sheet to read from.
+    column_To_check(str): name of the column to check
+    output_csv (str): Path to the CSV file to save the data.
+    
+
+    Returns:
+    dict: Detected character encoding result.
+    """
+    # Load the Excel file
+    raw_data = pd.ExcelFile(file_path)
+    
+    # Read the specified sheet
+    sheet_name = pd.read_excel(raw_data, sheet_name)
+    
+    # Save the specified column to a CSV file
+    default = sheet_name[column_To_check]
+    default.to_csv(f"{column_To_check}.csv")
+    
+    # Open the CSV file and detect encoding
+    with open(f"{column_To_check}.csv", 'rb') as rawdata:
+        result = charset_normalizer.detect(rawdata.read(len(default)))
+    
+    # Print the result
+    print(result)
+    os.remove(f'{column_To_check}.csv')
+    return result
