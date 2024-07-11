@@ -210,6 +210,7 @@ for cols in ['online_order','order_status', 'brand', 'product_line','product_cla
         
 #----disribution of bike related purchases over the past three years        
 dist = px.sunburst(NewCustomerList ,path=['state','wealth_segment'],values ='past_3_years_bike_related_purchases')
+dist.update_layout(title_text='bike related purchases over the past three years',title_x=0.5)
 py.iplot(dist,filename = 'bike related purchases')
 
 # cluster analysis 
