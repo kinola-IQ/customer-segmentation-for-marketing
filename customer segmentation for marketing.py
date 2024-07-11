@@ -14,7 +14,8 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np 
 from sklearn.impute import KNNImputer
-from mlxtend.preprocesing import minmax_scaling
+from mlxtend.preprocessing import minmax_scaling
+import charset_normalizer
 
 #for interactive visualization
 import chart_studio
@@ -73,6 +74,11 @@ dup_check = ch.Dup_Tot(Transactions,NewCustomerList,CustomerDemographic,Customer
 #-----------------------checking for and inspecing unamed and unusable columns-------------
 unamed_cols = ( NewCustomerList[NewCustomerList.columns[NewCustomerList.columns.str.contains('Unnamed')]])
 
+#---------first to check if 'default' column is encoded before removing-------------
+with open(file_path,'rb') as rawdata:
+    result = charset_normalizer.detect(rawdata.read(len(CustomerDemographic)))
+# print(result)
+#-------not encoded so i'll remove it---------
 unusable = ( CustomerDemographic[CustomerDemographic.columns[CustomerDemographic.columns.str.contains('default')]])
 
 #-----------------------checking for outliers-----------------------
@@ -118,6 +124,10 @@ CustomerDemographic = CustomerDemographic.drop(unusable,axis=1)
 
 #----------------handling missing data---------------------
 #--------------scaling missing numerical values so they contribute equally in KNN
+# Convert standard_cost to numerical values
+Transactions['standard_cost'] = pd.to_numeric(Transactions['standard_cost'], errors='coerce')
+Transactions['product_first_sold_date'] = pd.to_numeric(Transactions['product_first_sold_date'], errors='coerce')
+
 Transactions[['standard_cost','product_first_sold_date']] = minmax_scaling(Transactions,columns=[['standard_cost','product_first_sold_date']])
 
 #------------------Impute missing values in Transactions--------------------------
