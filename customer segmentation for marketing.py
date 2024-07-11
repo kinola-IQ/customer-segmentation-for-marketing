@@ -240,8 +240,8 @@ scat = go.Scatter(
 lay = go.Layout(
     title='custeomer segment',
     xaxis = dict(title='tenure'),
-    yaxis = dict(title='poperty_valuation')),
-fig= go.Figure(data=[scat],layout=lay),
+    yaxis = dict(title='poperty_valuation'))
+fig= go.Figure(data=[scat],layout=lay)
 py.iplot(fig,filename='customer segments')
 
 # cluster quality assesment using silouhette score
