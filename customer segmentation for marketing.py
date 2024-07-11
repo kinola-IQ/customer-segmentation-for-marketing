@@ -16,7 +16,6 @@ import numpy as np
 from sklearn.impute import KNNImputer
 from mlxtend.preprocessing import minmax_scaling
 import charset_normalizer
-
 #for interactive visualization
 import chart_studio
 import chart_studio.plotly as py
@@ -75,10 +74,9 @@ dup_check = ch.Dup_Tot(Transactions,NewCustomerList,CustomerDemographic,Customer
 unamed_cols = ( NewCustomerList[NewCustomerList.columns[NewCustomerList.columns.str.contains('Unnamed')]])
 
 #---------first to check if 'default' column is encoded before removing-------------
-with open(file_path,'rb') as rawdata:
-    result = charset_normalizer.detect(rawdata.read(len(CustomerDemographic)))
-# print(result)
-#-------not encoded so i'll remove it---------
+check = ch.detect_encoding(file_path, 'CustomerDemographic' , 'default')
+
+#-------encoded but still not useful so i'll remove it---------
 unusable = ( CustomerDemographic[CustomerDemographic.columns[CustomerDemographic.columns.str.contains('default')]])
 
 #-----------------------checking for outliers-----------------------
