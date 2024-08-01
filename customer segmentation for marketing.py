@@ -4,8 +4,6 @@ Created on Wed Jun  5 17:21:50 2024
 
 @author: akinola
 """
-
-# import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -14,7 +12,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np 
 from sklearn.impute import KNNImputer
-from mlxtend.preprocessing import minmax_scaling
+
 
 #for interactive visualization
 import chart_studio
@@ -120,15 +118,6 @@ data2 = sns.clustermap(pivot_data, cmap='mako')
 NewCustomerList = NewCustomerList.drop(unamed_cols,axis=1)
 
 CustomerDemographic = CustomerDemographic.drop(unusable,axis=1)
-
-
-#----------------handling missing data---------------------
-#--------------scaling missing numerical values so they contribute equally in KNN
-# Convert standard_cost to numerical values
-# Transactions['standard_cost'] = pd.to_numeric(Transactions['standard_cost'], errors='coerce')
-# Transactions['product_first_sold_date'] = pd.to_numeric(Transactions['product_first_sold_date'], errors='coerce')
-
-# Transactions[['standard_cost','product_first_sold_date']] = minmax_scaling(Transactions,columns=[['standard_cost','product_first_sold_date']])
 
 #------------------Impute missing values in Transactions--------------------------
 
